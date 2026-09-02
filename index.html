@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Vrindavan Birthday Quest 🪷</title>
+<meta name="description" content="A little Janmashtami birthday surprise." />
+
+<!-- ============================================================
+     EASY EDIT ZONE — change these and you're mostly done.
+     Friend's name is set in script.js -> CONFIG.friendName
+     Photos go in assets/photos/ as photo1.jpg ... photo8.jpg
+     Music goes in assets/music/music.mp3
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ FIXED BACKGROUND WORLD ============ -->
+<div class="sky" aria-hidden="true">
+  <div class="stars" id="stars"></div>
+  <div class="moon"></div>
+  <div class="fog fog--1"></div>
+  <div class="fog fog--2"></div>
+  <div class="hills hills--far"></div>
+  <div class="hills hills--near"></div>
+</div>
+
+<!-- floating particle layer (diyas, petals, feathers) injected by JS -->
+<div class="particle-field" id="particleField" aria-hidden="true"></div>
+
+<!-- ============ KRISHNA COMPANION ============
+     Walks alongside her scroll and pauses at each question.
+     Default art is a hand-drawn gold emblem (below, inline SVG).
+     To use real art instead, just add assets/decor/krishna.png —
+     it will automatically replace the emblem if it loads. -->
+<div class="krishna-companion" id="krishnaCompanion" aria-hidden="true">
+  <div class="krishna-companion__figure">
+    <img class="krishna-companion__img" data-src="assets/decor/krishna.png" alt="" />
+    <svg class="krishna-companion__svg" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="kBackGlow" cx="50%" cy="38%" r="60%">
+          <stop offset="0%" stop-color="#f0ce7c" stop-opacity="0.4" />
+          <stop offset="100%" stop-color="#0a1730" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="kGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f6dd9a" />
+          <stop offset="100%" stop-color="#c9a24b" />
+        </linearGradient>
+      </defs>
+      <circle cx="60" cy="76" r="56" fill="url(#kBackGlow)" />
+      <circle cx="60" cy="76" r="54" fill="none" stroke="url(#kGold)" stroke-width="1" opacity="0.45" />
+      <!-- crescent moon -->
+      <path d="M82,26 A7,7 0 1 1 82,40 A9,9 0 1 0 82,26" fill="url(#kGold)" opacity="0.85" />
+      <!-- curling peacock feather -->
+      <path d="M67,32 C75,24 79,12 71,7 C67,5 68,15 74,18" fill="none" stroke="url(#kGold)" stroke-width="2.4" stroke-linecap="round" />
+      <circle cx="74" cy="18" r="3" fill="url(#kGold)" opacity="0.9" />
+      <!-- crown band -->
+      <path d="M50,38 Q60,28 70,38" fill="none" stroke="url(#kGold)" stroke-width="3" stroke-linecap="round" />
+      <!-- head -->
+      <circle cx="60" cy="46" r="10" fill="url(#kGold)" />
+      <!-- flowing robe / body, gentle contrapposto lean -->
+      <path d="M60,56 C50,58 45,68 47,80 C43,92 39,104 45,122 C49,132 55,136 60,136 C65,136 71,132 75,122 C81,104 77,92 73,80 C75,68 70,58 60,56 Z" fill="url(#kGold)" opacity="0.95" />
+      <!-- arms -->
+      <path d="M49,64 C43,68 39,72 36,76" fill="none" stroke="url(#kGold)" stroke-width="4" stroke-linecap="round" />
+      <path d="M71,64 C77,68 81,72 84,76" fill="none" stroke="url(#kGold)" stroke-width="4" stroke-linecap="round" />
+      <!-- flute -->
+      <line x1="34" y1="77" x2="88" y2="72" stroke="url(#kGold)" stroke-width="4" stroke-linecap="round" />
+    </svg>
+  </div>
+</div>
+
+<!-- ============ PROGRESS TRAIL ============ -->
+<nav class="trail" id="trail" aria-label="Quest progress">
+  <span class="trail__flute">𝄞</span>
+  <ol class="trail__diyas">
+    <li class="trail__diya" data-level="1"><i>🪔</i></li>
+    <li class="trail__diya" data-level="2"><i>🪔</i></li>
+    <li class="trail__diya" data-level="3"><i>🪔</i></li>
+    <li class="trail__diya" data-level="4"><i>🪔</i></li>
+    <li class="trail__diya" data-level="5"><i>🪔</i></li>
+  </ol>
+</nav>
+
+<!-- ============ MUSIC TOGGLE ============ -->
+<button class="music-btn" id="musicBtn" type="button" aria-pressed="false">
+  <span class="music-btn__icon">🔇</span>
+  <span class="music-btn__label">Music Off</span>
+</button>
+<audio id="bgMusic" loop preload="none">
+  <source src="assets/music/music.mp3" type="audio/mpeg" />
+</audio>
+
+<main>
+
+  <!-- ============ INTRO ============ -->
+  <section class="scene scene--intro" id="intro">
+    <div class="scene__inner">
+      <p class="eyebrow-line">Somewhere in the lanes of Vrindavan</p>
+      <h1 class="intro__line intro__line--1">Aaj Vrindavan ki galiyon mein<br>ek chhota sa raaz chhupa hai&hellip;</h1>
+      <p class="intro__line intro__line--2">Is raaz ko unlock karne ke liye<br>tumhe kuch chhote challenges complete karne honge.</p>
+      <button class="btn btn--gold" id="startBtn" type="button">Start the journey <span class="btn__icon">🪷</span></button>
+      <div class="intro__feather" aria-hidden="true">🪶</div>
+    </div>
+    <div class="scroll-hint" aria-hidden="true"><span></span>scroll</div>
+  </section>
+
+  <!-- ============ QUEST JOURNEY (Krishna companion walks alongside this zone) ============ -->
+  <div class="quest-journey" id="questJourney">
+
+  <!-- ============ LEVEL 1 — PAHELI ============ -->
+  <section class="scene scene--level" id="level1" data-level="1">
+    <div class="level-card">
+      <p class="level-card__tag">Level 01 — Krishna ki Paheli</p>
+      <div class="level-card__icon" aria-hidden="true">🪶</div>
+      <h2 class="level-card__q">Krishna ji ke mukut ki sabse khaas pehchaan kya hai?</h2>
+      <div class="options" data-answer="B">
+        <button class="option" data-key="A">Phool</button>
+        <button class="option" data-key="B">Morpankh</button>
+        <button class="option" data-key="C">Diya</button>
+        <button class="option" data-key="D">Bansuri</button>
+      </div>
+      <p class="level-card__feedback" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ============ PHOTO INTERLUDE 1 ============ -->
+  <section class="scene scene--photos" id="photos1">
+    <div class="photo-drift" data-caption="Ek simple si smile 😊">
+      <figure class="photo-frame photo-frame--a" data-src="assets/photos/photo1.jpg"><img alt="" loading="lazy" /><figcaption>Ek simple si smile 😊</figcaption></figure>
+      <figure class="photo-frame photo-frame--b" data-src="assets/photos/photo2.jpg"><img alt="" loading="lazy" /></figure>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 2 — HIDDEN DIYA ============ -->
+  <section class="scene scene--level" id="level2" data-level="2">
+    <div class="level-card level-card--wide">
+      <p class="level-card__tag">Level 02 — Hidden Diya</p>
+      <h2 class="level-card__q">Vrindavan ki roshni mein ek diya baaki sabse alag hai&hellip; use dhoondo.</h2>
+      <div class="diya-grid" id="diyaGrid" aria-hidden="false"></div>
+      <p class="level-card__feedback" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ============ PHOTO INTERLUDE 2 ============ -->
+  <section class="scene scene--photos" id="photos2">
+    <div class="photo-drift" data-caption="Ek aur yaad…">
+      <figure class="photo-frame photo-frame--c" data-src="assets/photos/photo3.jpg"><img alt="" loading="lazy" /><figcaption>Ek aur yaad&hellip;</figcaption></figure>
+      <figure class="photo-frame photo-frame--d" data-src="assets/photos/photo4.jpg"><img alt="" loading="lazy" /></figure>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 3 — TUITION MEMORY ============ -->
+  <section class="scene scene--level" id="level3" data-level="3">
+    <div class="level-card">
+      <p class="level-card__tag">Level 03 — Purani Yaad</p>
+      <div class="level-card__icon" aria-hidden="true">💻</div>
+      <h2 class="level-card__q">Hum pehli baar kahan mile the?</h2>
+      <div class="options options--stack" data-answer="B">
+        <button class="option" data-key="A">School</button>
+        <button class="option" data-key="B">Computer Tuition 💻</button>
+        <button class="option" data-key="C">Instagram</button>
+        <button class="option" data-key="D">Market</button>
+      </div>
+      <p class="level-card__feedback" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ============ PHOTO INTERLUDE 3 ============ -->
+  <section class="scene scene--photos" id="photos3">
+    <div class="photo-drift" data-caption="Good vibes ✨">
+      <figure class="photo-frame photo-frame--a" data-src="assets/photos/photo5.jpg"><img alt="" loading="lazy" /><figcaption>Good vibes ✨</figcaption></figure>
+      <figure class="photo-frame photo-frame--b" data-src="assets/photos/photo6.jpg"><img alt="" loading="lazy" /></figure>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 4 — EMOJI PUZZLE ============ -->
+  <section class="scene scene--level" id="level4" data-level="4">
+    <div class="level-card">
+      <p class="level-card__tag">Level 04 — Bansuri ki Paheli</p>
+      <h2 class="level-card__q">Is puzzle ko suljhao:</h2>
+      <div class="emoji-puzzle" aria-hidden="true">🦚 &nbsp;+&nbsp; 🎵 &nbsp;+&nbsp; 🪷 &nbsp;=&nbsp; ?</div>
+      <form class="text-answer" id="level4Form" autocomplete="off">
+        <input type="text" id="level4Input" placeholder="Apna jawaab yahan likho" aria-label="Your answer" />
+        <button type="submit" class="btn btn--small">Check</button>
+      </form>
+      <p class="level-card__feedback" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ============ PHOTO INTERLUDE 4 ============ -->
+  <section class="scene scene--photos" id="photos4">
+    <div class="photo-drift" data-caption="Almost there…">
+      <figure class="photo-frame photo-frame--c" data-src="assets/photos/photo7.jpg"><img alt="" loading="lazy" /><figcaption>Almost there&hellip;</figcaption></figure>
+      <figure class="photo-frame photo-frame--d" data-src="assets/photos/photo8.jpg"><img alt="" loading="lazy" /></figure>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL 5 — FINAL LOCK ============ -->
+  <section class="scene scene--level" id="level5" data-level="5">
+    <div class="level-card">
+      <p class="level-card__tag">Level 05 — Aakhri Sawaal</p>
+      <div class="temple-door" aria-hidden="true">
+        <div class="temple-door__leaf temple-door__leaf--l"></div>
+        <div class="temple-door__leaf temple-door__leaf--r"></div>
+        <div class="temple-door__lock">🔒</div>
+      </div>
+      <h2 class="level-card__q">Bas ek aakhri sawaal&hellip;<br>4 September ko kya special hai?</h2>
+      <form class="text-answer" id="level5Form" autocomplete="off">
+        <input type="text" id="level5Input" placeholder="Apna jawaab yahan likho" aria-label="Your answer" />
+        <button type="submit" class="btn btn--small">Check</button>
+      </form>
+      <p class="level-card__feedback" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ============ UNLOCK GATE ============ -->
+  <section class="scene scene--gate" id="gate">
+    <div class="gate__card">
+      <p class="gate__status" id="gateStatus">✨ All challenges completed ✨</p>
+      <button class="btn btn--gold btn--large" id="unlockBtn" type="button">Unlock the surprise <span class="btn__icon">🔓</span></button>
+      <p class="gate__hint" id="gateHint">Complete the 5 challenges above to unlock this.</p>
+    </div>
+  </section>
+
+  </div>
+  <!-- ============ /QUEST JOURNEY ============ -->
+
+  <!-- ============ FINALE ============ -->
+  <section class="scene scene--finale" id="finale">
+    <div class="finale__doors" id="finaleDoors">
+      <div class="finale__leaf finale__leaf--l"></div>
+      <div class="finale__leaf finale__leaf--r"></div>
+      <div class="finale__glow"></div>
+    </div>
+    <div class="finale__content" id="finaleContent">
+      <p class="finale__cheer">🎉 HAPPY BIRTHDAY <span id="friendNameSlot">SNEHA</span> 🎉</p>
+      <p class="finale__date">4 SEPTEMBER 🪷</p>
+      <p class="finale__message">
+        Janmashtami ke is pawan din par tumhe birthday ki bahut saari shubhkamnayein. 🦚<br><br>
+        Kanha ji tumhari life ko happiness, success aur good vibes se bhar dein.<br><br>
+        Hamesha smile karti raho aur apna birthday enjoy karo! ✨
+      </p>
+      <p class="finale__signature">Made specially as a little birthday surprise 💙</p>
+    </div>
+  </section>
+
+  <!-- ============ FINAL MONTAGE ============ -->
+  <section class="scene scene--montage" id="montage">
+    <p class="montage__tag">A few more memories</p>
+    <div class="montage__track" id="montageTrack">
+      <figure class="photo-frame photo-frame--a" data-src="assets/photos/photo1.jpg"><img alt="" loading="lazy" /></figure>
+      <figure class="photo-frame photo-frame--b" data-src="assets/photos/photo3.jpg"><img alt="" loading="lazy" /></figure>
+      <figure class="photo-frame photo-frame--c" data-src="assets/photos/photo5.jpg"><img alt="" loading="lazy" /></figure>
+      <figure class="photo-frame photo-frame--d" data-src="assets/photos/photo7.jpg"><img alt="" loading="lazy" /></figure>
+      <figure class="photo-frame photo-frame--a" data-src="assets/photos/photo2.jpg"><img alt="" loading="lazy" /></figure>
+      <figure class="photo-frame photo-frame--b" data-src="assets/photos/photo8.jpg"><img alt="" loading="lazy" /></figure>
+    </div>
+    <p class="montage__end">Once again&hellip; HAPPY BIRTHDAY! 🎂🦚</p>
+  </section>
+
+  <!-- ============ PERSONAL NOTE ============ -->
+  <section class="scene scene--note" id="note">
+    <div class="note-card">
+      <div class="note-card__icon" aria-hidden="true">🪔</div>
+      <p class="note-card__text">
+        Ek chhoti si baat batau?<br><br>
+        Tuition jaisa bhi ho acche bacche jaise Dost de gaya.
+    
+        Pichle 2 saal se tumhare birthday par video banata tha — is baar socha kuch alag karein. Toh bas yun hi mann mein aaya aur ek pura website bana diya 😄 (thoda zyada hi ho gaya shayad, but tumhare liye chalta hai).<br><br>
+        Waise ek streak bhi maintain kar li hai humne — I hope ki tute na, warna dobara shuru karni padegi 😅<br><br>
+        Ab teen saal ho gaye — aur ek baat pakki hai, tum sach mein best ho. Apna attitude, apni energy, sab kuch original hai tumhara.<br><br>
+        Aage ki life mein jo bhi karo, poora dil se karo. Waise hi shine karti raho jaise abhi karti ho. Bahut saari best wishes tumhare future ke liye! 🌸......
+
+
+                BTW jayda ho gaya ho toh maaf  karna just aase hei kar diya sab maan m aaya toh..
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ PUPPY WISH ============ -->
+  <section class="scene scene--puppy" id="puppyNote">
+    <div class="puppy-card">
+      <figure class="photo-frame puppy-photo" data-src="assets/photos/puppy.jpg">
+        <img alt="" loading="lazy" />
+      </figure>
+      <p class="puppy-card__text">Ek aur chhota dost bhi kuch kehna chahta tha&hellip;</p>
+      <p class="puppy-card__wish">
+        Jahan bhi ho, aaj uski tail zaroor tumhare liye hil rahi hogi. 🐾<br>
+        Uski taraf se bhi&hellip; Happy Birthday! 🐶
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-credit">Made with ❤️ by Amit</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
